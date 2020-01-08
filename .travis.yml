@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t rpmoore8/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true rpmoore8/react-test npm test
+
+after_success:
+  - docker build -t rpmoore8/multi-client ./client
+  - docker build -t rpmoore8/multi-inginx ./nginx
+  - docker build -t rpmoore8/multi-server ./server
+  - docker build -t -rpmoore8/multi-worker ./worker
+# Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+# Take those images and push them to docker hub
+  - docker push rpmoore8/multi-client
+  - docker push rpmoore8/multi-inginx
+  - docker push rpmoore8/multi-server
+  - docker push rpmoore8/multi-worker
